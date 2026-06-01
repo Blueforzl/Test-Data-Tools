@@ -1,0 +1,78 @@
+{
+  "main": "index.html",
+  "preload": "preload/services.js",
+  "logo": "logo.png",
+  "development": {
+    "main": "http://localhost:5173"
+  },
+  "features": [
+    {
+      "code": "generator",
+      "explain": "随机生成测试数据（手机号、姓名、邮箱、身份证等）",
+      "cmds": ["随机数据", "测试数据", "random", "generator"]
+    },
+    {
+      "code": "gen-name",
+      "explain": "生成随机姓名",
+      "cmds": ["姓名", "名字", "生成姓名"]
+    },
+    {
+      "code": "gen-phone",
+      "explain": "生成随机手机号",
+      "cmds": ["手机号", "电话", "生成手机号"]
+    },
+    {
+      "code": "gen-email",
+      "explain": "生成随机邮箱",
+      "cmds": ["邮箱", "Email", "生成邮箱"]
+    },
+    {
+      "code": "gen-idcard",
+      "explain": "生成随机身份证号",
+      "cmds": ["身份证", "身份证号", "生成身份证"]
+    },
+    {
+      "code": "gen-bankcard",
+      "explain": "生成随机银行卡号",
+      "cmds": ["银行卡", "卡号", "生成银行卡"]
+    },
+    {
+      "code": "gen-nickname",
+      "explain": "生成随机昵称",
+      "cmds": ["昵称", "网名", "生成昵称"]
+    },
+    {
+      "code": "gen-address",
+      "explain": "生成随机地址",
+      "cmds": ["地址", "家庭住址", "生成地址"]
+    },
+    {
+      "code": "read",
+      "explain": "功能指令+匹配指令示例，使用 node.js 能力读文件",
+      "cmds": [
+        "读文件",
+        {
+          "type": "files",
+          "fileType": "file",
+          "maxLength": 1,
+          "label": "读文件"
+        }
+      ]
+    },
+    {
+      "code": "write",
+      "explain": "匹配指令示例，使用 node.js 能力写文件",
+      "mainHide": true,
+      "cmds": [
+        {
+          "type": "over",
+          "label": "保存为文件"
+        },
+        {
+          "type": "img",
+          "label": "保存为文件"
+        }
+      ]
+    }
+  ]
+}
