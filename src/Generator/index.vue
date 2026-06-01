@@ -17,6 +17,8 @@ const props = defineProps({
   },
 });
 
+const isRefreshing = ref(false);
+
 const dataList = ref([
   {
     label: "姓名",
@@ -24,6 +26,7 @@ const dataList = ref([
     generator: generateName,
     key: "name",
     code: "gen-name",
+    icon: "👤",
   },
   {
     label: "手机号",
@@ -31,6 +34,7 @@ const dataList = ref([
     generator: generatePhone,
     key: "phone",
     code: "gen-phone",
+    icon: "📱",
   },
   {
     label: "邮箱",
@@ -38,6 +42,7 @@ const dataList = ref([
     generator: generateEmail,
     key: "email",
     code: "gen-email",
+    icon: "📧",
   },
   {
     label: "昵称",
@@ -45,6 +50,7 @@ const dataList = ref([
     generator: generateNickname,
     key: "nickname",
     code: "gen-nickname",
+    icon: "😊",
   },
   {
     label: "身份证",
@@ -52,6 +58,7 @@ const dataList = ref([
     generator: generateIDCard,
     key: "idcard",
     code: "gen-idcard",
+    icon: "🪪",
   },
   {
     label: "银行卡",
@@ -59,6 +66,7 @@ const dataList = ref([
     generator: generateBankCard,
     key: "bankcard",
     code: "gen-bankcard",
+    icon: "💳",
   },
   {
     label: "地址",
@@ -66,23 +74,41 @@ const dataList = ref([
     generator: generateAddress,
     key: "address",
     code: "gen-address",
+    icon: "📍",
   },
 ]);
 
 const refreshData = (item) => {
   item.value = item.generator();
+  // 触发刷新动画
+  item.refreshing = true;
+  setTimeout(() => {
+    item.refreshing = false;
+  }, 600);
 };
 
 const refreshAll = () => {
+  isRefreshing.value = true;
   dataList.value.forEach((item) => {
     item.value = item.generator();
   });
+  setTimeout(() => {
+    isRefreshing.value = false;
+  }, 600);
 };
 
-const copyData = (text, silent = false) => {
+const copyData = (item, silent = false) => {
+  const text = typeof item === 'object' ? item.value : item;
   window.utools.copyText(text);
   if (!silent) {
-    window.utools.showNotification("已复制到剪贴板");
+    window.utools.showNotification("✓ 已复制到剪贴板");
+    // 触发复制成功动画
+    if (typeof item === 'object') {
+      item.copied = true;
+      setTimeout(() => {
+        item.copied = false;
+      }, 800);
+    }
   }
 };
 
@@ -90,11 +116,11 @@ const handleEnterAction = (action) => {
   refreshAll();
   const matchedItem = dataList.value.find((item) => item.code === action.code);
   if (matchedItem) {
-    // 如果是通过特定指令进入的，自动生成并复制
+    // 如果是通过特定指令进入的,自动生成并复制
     const newValue = matchedItem.generator();
     matchedItem.value = newValue;
-    copyData(newValue, true);
-    window.utools.showNotification(`随机${matchedItem.label}已生成并复制`);
+    copyData(matchedItem, true);
+    window.utools.showNotification(`✓ 随机${matchedItem.label}已生成并复制`);
   }
 };
 
@@ -115,37 +141,70 @@ onMounted(() => {
 
 <template>
   <div class="generator-container">
+    <!-- 背景装饰元素 -->
+    <div class="bg-decoration">
+      <div class="floating-orb orb-1"></div>
+      <div class="floating-orb orb-2"></div>
+      <div class="floating-orb orb-3"></div>
+    </div>
+
     <div class="glass-header">
       <div class="header-content">
-        <h2 class="title"><span class="title-icon">✨</span> 随机测试数据</h2>
+        <div class="title-section">
+          <h2 class="title">
+            <span class="title-icon">✨</span> 
+            <span class="title-text">随机测试数据</span>
+          </h2>
+          <p class="subtitle">快速生成各类测试数据</p>
+        </div>
         <button @click="refreshAll" class="refresh-main-btn">
-          <span class="btn-icon">🔄</span> 全部刷新
+          <span class="btn-icon" :class="{ 'rotating': isRefreshing }">🔄</span> 
+          <span class="btn-text">全部刷新</span>
         </button>
       </div>
     </div>
 
     <div class="data-grid">
-      <div v-for="item in dataList" :key="item.key" class="data-card">
+      <div 
+        v-for="item in dataList" 
+        :key="item.key" 
+        class="data-card"
+        :class="{ 'copied': item.copied, 'refreshing': item.refreshing }"
+        :style="{ animationDelay: `${item.key.charCodeAt(0) * 0.05}s` }"
+      >
         <div class="card-header">
-          <span class="label">{{ item.label }}</span>
+          <div class="label-section">
+            <span class="card-icon">{{ item.icon }}</span>
+            <span class="label">{{ item.label }}</span>
+          </div>
           <div class="card-actions">
-            <button @click="refreshData(item)" class="icon-btn" title="刷新">
+            <button 
+              @click="refreshData(item)" 
+              class="icon-btn" 
+              title="刷新"
+              :class="{ 'spinning': item.refreshing }"
+            >
               <span class="icon">🔄</span>
             </button>
-            <button @click="copyData(item.value)" class="icon-btn" title="复制">
-              <span class="icon">📋</span>
+            <button 
+              @click="copyData(item)" 
+              class="icon-btn" 
+              title="复制"
+              :class="{ 'success': item.copied }"
+            >
+              <span class="icon">{{ item.copied ? '✓' : '📋' }}</span>
             </button>
           </div>
         </div>
-        <div class="card-body" @click="copyData(item.value)">
-          <div class="value-display">{{ item.value }}</div>
-          <div class="copy-hint">点击快速复制</div>
+        <div class="card-body" @click="copyData(item)">
+          <div class="value-display">{{ item.value || '点击生成...' }}</div>
+          <div class="copy-hint">{{ item.copied ? '✓ 已复制' : '点击复制' }}</div>
         </div>
       </div>
     </div>
 
     <div class="footer-info">
-      <p>✨@Hanshantemple</p>
+      <p>✦ 精心打造 · 提升效率 ✦</p>
     </div>
   </div>
 </template>
@@ -155,6 +214,55 @@ onMounted(() => {
   padding: 80px 24px 40px;
   min-height: 100vh;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景装饰 */
+.bg-decoration {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: float 8s ease-in-out infinite;
+}
+
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: var(--gradient-primary);
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.orb-2 {
+  width: 250px;
+  height: 250px;
+  background: var(--gradient-accent);
+  top: 50%;
+  right: -80px;
+  animation-delay: 2s;
+}
+
+.orb-3 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  bottom: -50px;
+  left: 30%;
+  animation-delay: 4s;
 }
 
 .glass-header {
@@ -162,70 +270,135 @@ onMounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background: rgba(255, 255, 240, 0.8);
-  backdrop-filter: blur(10px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   z-index: 100;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-  display: flex;
-  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  animation: slideDown 0.6s ease-out;
 }
 
 .header-content {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 24px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .refresh-main-btn {
-  background: var(--accent);
+  background: var(--gradient-primary);
   color: #fff;
-  border-radius: 20px;
-  padding: 6px 16px;
-  font-size: 0.85rem;
+  border-radius: 24px;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.refresh-main-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5);
+}
+
+.btn-icon {
+  display: inline-block;
+  transition: transform 0.3s;
+}
+
+.btn-icon.rotating {
+  animation: spin 0.6s ease;
 }
 
 .data-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  max-width: 1000px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .data-card {
-  background: var(--light);
+  background: var(--gradient-card);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--glass-border);
   border-radius: var(--border-radius);
-  padding: 16px;
+  padding: 20px;
   box-shadow: var(--shadow);
-  border: 1px solid rgba(212, 175, 55, 0.05);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  animation: fadeIn 0.6s ease-out backwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.data-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.data-card:hover::before {
+  transform: scaleX(1);
 }
 
 .data-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.data-card.copied {
+  animation: glow-pulse 0.8s ease;
+}
+
+.data-card.refreshing .card-icon {
+  animation: spin 0.6s ease;
 }
 
 .card-header {
@@ -234,94 +407,193 @@ onMounted(() => {
   align-items: center;
 }
 
+.label-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-icon {
+  font-size: 1.6rem;
+  display: inline-block;
+  transition: transform 0.3s;
+}
+
+.data-card:hover .card-icon {
+  transform: scale(1.1);
+}
+
 .label {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
 }
 
 .card-actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 
 .icon-btn {
-  background: transparent;
+  background: var(--glass-bg-light);
+  backdrop-filter: blur(10px);
   color: var(--text-secondary);
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .icon-btn:hover {
-  background: var(--ivory-dark);
+  background: var(--glass-bg);
   color: var(--accent);
-  box-shadow: none;
-  transform: none;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+.icon-btn.spinning .icon {
+  animation: spin 0.6s ease;
+}
+
+.icon-btn.success {
+  background: rgba(72, 187, 120, 0.2);
+  color: #48bb78;
+  border-color: rgba(72, 187, 120, 0.3);
+}
+
+.icon {
+  font-size: 1rem;
+  display: inline-block;
+  transition: all 0.3s;
 }
 
 .card-body {
-  background: var(--ivory-dark);
-  padding: 14px;
-  border-radius: 8px;
+  background: var(--glass-bg-light);
+  backdrop-filter: blur(10px);
+  padding: 16px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: background 0.2s;
-  min-height: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  border: 1px solid var(--glass-border);
 }
 
 .card-body:hover {
-  background: #fdfce0;
+  background: var(--glass-bg);
+  border-color: rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.card-body:active {
+  transform: scale(0.98);
 }
 
 .value-display {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 500;
   color: var(--text-primary);
   word-break: break-all;
-  line-height: 1.4;
-}
-
-.copy-hint {
-  font-size: 0.7rem;
-  color: var(--accent);
-  margin-top: 4px;
-  opacity: 0;
+  line-height: 1.5;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   transition: opacity 0.2s;
 }
 
+.copy-hint {
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin-top: 6px;
+  opacity: 0.6;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
 .card-body:hover .copy-hint {
-  opacity: 0.8;
+  opacity: 1;
+  transform: translateY(-2px);
 }
 
 .footer-info {
-  margin-top: 48px;
+  margin-top: 64px;
   text-align: center;
   color: var(--text-secondary);
   font-size: 0.85rem;
   opacity: 0.7;
+  font-weight: 500;
+  letter-spacing: 1px;
+  animation: fadeIn 1s ease-out 0.5s backwards;
 }
 
 @media (prefers-color-scheme: dark) {
   .glass-header {
-    background: rgba(26, 26, 26, 0.8);
+    background: var(--glass-bg);
+    border-bottom-color: var(--glass-border);
   }
+  
   .card-body:hover {
-    background: #252525;
+    background: var(--glass-bg);
   }
+  
   .data-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    border-color: rgba(212, 175, 55, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border-color: rgba(102, 126, 234, 0.3);
+  }
+  
+  .icon-btn:hover {
+    background: rgba(45, 55, 72, 0.6);
+  }
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .data-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .refresh-main-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .floating-orb {
+    opacity: 0.15;
+  }
+}
+
+@media (max-width: 480px) {
+  .generator-container {
+    padding: 100px 16px 32px;
+  }
+  
+  .title {
+    font-size: 1.2rem;
+  }
+  
+  .data-card {
+    padding: 16px;
   }
 }
 </style>
