@@ -1,86 +1,89 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch } from "vue";
 
 const props = defineProps({
   enterAction: {
     type: Object,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-
-const filePath = ref('')
-const fileContent = ref('')
-const error = ref('')
-const isLoading = ref(false)
-const fileName = ref('')
+const filePath = ref("");
+const fileContent = ref("");
+const error = ref("");
+const isLoading = ref(false);
+const fileName = ref("");
 
 const extractFileName = (path) => {
-  if (!path) return ''
-  const parts = path.split(/[/\\]/)
-  return parts[parts.length - 1]
-}
+  if (!path) return "";
+  const parts = path.split(/[/\\]/);
+  return parts[parts.length - 1];
+};
 
 const handleOpenDialog = () => {
   // 通过 uTools 的 api 打开文件选择窗口
-  isLoading.value = true
-  error.value = ''
-  
+  isLoading.value = true;
+  error.value = "";
+
   const files = window.utools.showOpenDialog({
-    title: '选择文件',
-    properties: ['openFile']
-  })
-  
+    title: "选择文件",
+    properties: ["openFile"],
+  });
+
   if (!files || files.length === 0) {
-    isLoading.value = false
-    return
+    isLoading.value = false;
+    return;
   }
-  
-  const _filePath = files[0]
-  filePath.value = _filePath
-  fileName.value = extractFileName(_filePath)
-  
+
+  const _filePath = files[0];
+  filePath.value = _filePath;
+  fileName.value = extractFileName(_filePath);
+
   try {
-    const content = window.services.readFile(_filePath)
-    fileContent.value = content
+    const content = window.services.readFile(_filePath);
+    fileContent.value = content;
   } catch (err) {
-    error.value = err.message
-    fileContent.value = ''
+    error.value = err.message;
+    fileContent.value = "";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
-watch(() => props.enterAction, (enterAction) => {
-  if (enterAction.type === "files") {
-    isLoading.value = true
-    error.value = ''
-    // 匹配文件进入,直接读取文件
-    const _filePath = enterAction.payload[0].path;
+watch(
+  () => props.enterAction,
+  (enterAction) => {
+    if (enterAction.type === "files") {
+      isLoading.value = true;
+      error.value = "";
+      // 匹配文件进入,直接读取文件
+      const _filePath = enterAction.payload[0].path;
 
-    filePath.value = _filePath
-    fileName.value = extractFileName(_filePath)
-    
-    try {
-      const content = window.services.readFile(_filePath);
-      fileContent.value = content
-    } catch (err) {
-      error.value = err.message
-      fileContent.value = ''
-    } finally {
-      isLoading.value = false
+      filePath.value = _filePath;
+      fileName.value = extractFileName(_filePath);
+
+      try {
+        const content = window.services.readFile(_filePath);
+        fileContent.value = content;
+      } catch (err) {
+        error.value = err.message;
+        fileContent.value = "";
+      } finally {
+        isLoading.value = false;
+      }
     }
+  },
+  {
+    immediate: true,
   }
-}, {
-  immediate: true
-})
+);
 
 const copyContent = () => {
   if (fileContent.value) {
-    window.utools.copyText(fileContent.value)
-    window.utools.showNotification('✓ 文件内容已复制')
+    window.utools.copyText(fileContent.value);
+    window.utools.showNotification("✓ 文件内容已复制");
   }
-}
+};
 </script>
 
 <template>
@@ -94,9 +97,15 @@ const copyContent = () => {
       <!-- 头部控制区 -->
       <div class="read-header">
         <div class="file-selector">
-          <button @click="handleOpenDialog" class="select-btn" :disabled="isLoading">
+          <button
+            @click="handleOpenDialog"
+            class="select-btn"
+            :disabled="isLoading"
+          >
             <span class="btn-icon">📂</span>
-            <span class="btn-text">{{ isLoading ? '加载中...' : '选择文件' }}</span>
+            <span class="btn-text">{{
+              isLoading ? "加载中..." : "选择文件"
+            }}</span>
           </button>
         </div>
 
@@ -107,7 +116,12 @@ const copyContent = () => {
             <div class="file-name">{{ fileName }}</div>
             <div class="file-path">{{ filePath }}</div>
           </div>
-          <button @click="copyContent" class="copy-btn" v-if="fileContent" title="复制全部内容">
+          <button
+            @click="copyContent"
+            class="copy-btn"
+            v-if="fileContent"
+            title="复制全部内容"
+          >
             <span class="copy-icon">📋</span>
           </button>
         </div>
@@ -124,7 +138,9 @@ const copyContent = () => {
         <div class="file-content-wrapper">
           <div class="content-header">
             <span class="header-label">文件内容</span>
-            <span class="line-count">{{ fileContent.split('\n').length }} 行</span>
+            <span class="line-count"
+              >{{ fileContent.split("\n").length }} 行</span
+            >
           </div>
           <pre class="file-content">{{ fileContent }}</pre>
         </div>
@@ -197,7 +213,7 @@ const copyContent = () => {
 }
 
 .read-header {
-  animation: slideDown 0.6s ease-out;
+  animation: slideDown 0.4s ease-out; /* 缩短动画时间 */
 }
 
 .file-selector {
@@ -248,7 +264,7 @@ const copyContent = () => {
   align-items: center;
   gap: 16px;
   box-shadow: var(--shadow);
-  animation: fadeIn 0.6s ease-out;
+  animation: fadeIn 0.4s ease-out; /* 缩短动画时间 */
   margin-bottom: 24px;
   will-change: transform;
   transform: translateZ(0);
@@ -342,7 +358,7 @@ const copyContent = () => {
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   overflow: hidden;
-  animation: slideUp 0.6s ease-out;
+  animation: slideUp 0.4s ease-out; /* 缩短动画时间 */
   will-change: transform;
   transform: translateZ(0);
 }
@@ -380,7 +396,7 @@ const copyContent = () => {
   padding: 24px;
   box-sizing: border-box;
   margin: 0;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--text-primary);
@@ -421,7 +437,7 @@ const copyContent = () => {
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  animation: fadeIn 0.6s ease-out;
+  animation: fadeIn 0.4s ease-out; /* 缩短动画时间 */
 }
 
 .empty-icon {
@@ -443,7 +459,7 @@ const copyContent = () => {
     background: rgba(245, 101, 101, 0.15);
     border-color: rgba(245, 101, 101, 0.4);
   }
-  
+
   .file-content {
     color: var(--text-primary);
   }
@@ -454,16 +470,16 @@ const copyContent = () => {
   .read-container {
     padding: 80px 16px 32px;
   }
-  
+
   .file-info {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .copy-btn {
     align-self: flex-end;
   }
-  
+
   .file-content {
     max-height: 400px;
     font-size: 0.85rem;

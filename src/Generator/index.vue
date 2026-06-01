@@ -27,6 +27,8 @@ const dataList = ref([
     key: "name",
     code: "gen-name",
     icon: "👤",
+    refreshing: false,
+    copied: false,
   },
   {
     label: "手机号",
@@ -35,6 +37,8 @@ const dataList = ref([
     key: "phone",
     code: "gen-phone",
     icon: "📱",
+    refreshing: false,
+    copied: false,
   },
   {
     label: "邮箱",
@@ -43,6 +47,8 @@ const dataList = ref([
     key: "email",
     code: "gen-email",
     icon: "📧",
+    refreshing: false,
+    copied: false,
   },
   {
     label: "昵称",
@@ -51,6 +57,8 @@ const dataList = ref([
     key: "nickname",
     code: "gen-nickname",
     icon: "😊",
+    refreshing: false,
+    copied: false,
   },
   {
     label: "身份证",
@@ -59,6 +67,8 @@ const dataList = ref([
     key: "idcard",
     code: "gen-idcard",
     icon: "🪪",
+    refreshing: false,
+    copied: false,
   },
   {
     label: "银行卡",
@@ -67,6 +77,8 @@ const dataList = ref([
     key: "bankcard",
     code: "gen-bankcard",
     icon: "💳",
+    refreshing: false,
+    copied: false,
   },
   {
     label: "地址",
@@ -75,8 +87,20 @@ const dataList = ref([
     key: "address",
     code: "gen-address",
     icon: "📍",
+    refreshing: false,
+    copied: false,
   },
 ]);
+
+// 初始化时立即生成数据,避免等待
+const initializeData = () => {
+  dataList.value.forEach((item) => {
+    item.value = item.generator();
+  });
+};
+
+// 组件挂载时立即生成数据
+initializeData();
 
 const refreshData = (item) => {
   item.value = item.generator();
@@ -113,10 +137,11 @@ const copyData = (item, silent = false) => {
 };
 
 const handleEnterAction = (action) => {
-  refreshAll();
+  if (!action || !action.code) return;
+
   const matchedItem = dataList.value.find((item) => item.code === action.code);
   if (matchedItem) {
-    // 如果是通过特定指令进入的,自动生成并复制
+    // 如果是通过特定指令进入的,重新生成并复制
     const newValue = matchedItem.generator();
     matchedItem.value = newValue;
     copyData(matchedItem, true);
@@ -126,12 +151,12 @@ const handleEnterAction = (action) => {
 
 watch(
   () => props.enterAction,
-  (newAction) => {
-    if (newAction && newAction.code) {
+  (newAction, oldAction) => {
+    // 只在 enterAction 真正变化时才处理,避免初始化时重复执行
+    if (newAction && newAction.code && newAction !== oldAction) {
       handleEnterAction(newAction);
     }
-  },
-  { immediate: true }
+  }
 );
 
 onMounted(() => {
@@ -164,11 +189,11 @@ onMounted(() => {
 
     <div class="data-grid">
       <div
-        v-for="item in dataList"
+        v-for="(item, index) in dataList"
         :key="item.key"
         class="data-card"
         :class="{ copied: item.copied, refreshing: item.refreshing }"
-        :style="{ animationDelay: `${item.key.charCodeAt(0) * 0.05}s` }"
+        :style="{ animationDelay: `${index * 0.03}s` }"
       >
         <div class="card-header">
           <div class="label-section">
@@ -264,7 +289,7 @@ onMounted(() => {
   z-index: 100;
   border-bottom: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  animation: slideDown 0.6s ease-out;
+  animation: slideDown 0.4s ease-out; /* 缩短动画时间 */
   /* 硬件加速 */
   will-change: transform;
   transform: translateZ(0);
@@ -359,7 +384,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  animation: fadeIn 0.6s ease-out backwards;
+  animation: fadeIn 0.3s ease-out backwards; /* 缩短动画时间 */
   position: relative;
   overflow: hidden;
   /* 硬件加速 */
