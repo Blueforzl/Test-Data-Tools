@@ -98,12 +98,12 @@ const refreshAll = () => {
 };
 
 const copyData = (item, silent = false) => {
-  const text = typeof item === 'object' ? item.value : item;
+  const text = typeof item === "object" ? item.value : item;
   window.utools.copyText(text);
   if (!silent) {
     window.utools.showNotification("✓ 已复制到剪贴板");
     // 触发复制成功动画
-    if (typeof item === 'object') {
+    if (typeof item === "object") {
       item.copied = true;
       setTimeout(() => {
         item.copied = false;
@@ -141,35 +141,33 @@ onMounted(() => {
 
 <template>
   <div class="generator-container">
-    <!-- 背景装饰元素 -->
+    <!-- 简化背景装饰 - 仅保留1个光球 -->
     <div class="bg-decoration">
       <div class="floating-orb orb-1"></div>
-      <div class="floating-orb orb-2"></div>
-      <div class="floating-orb orb-3"></div>
     </div>
 
     <div class="glass-header">
       <div class="header-content">
         <div class="title-section">
           <h2 class="title">
-            <span class="title-icon">✨</span> 
+            <span class="title-icon">✨</span>
             <span class="title-text">随机测试数据</span>
           </h2>
           <p class="subtitle">快速生成各类测试数据</p>
         </div>
         <button @click="refreshAll" class="refresh-main-btn">
-          <span class="btn-icon" :class="{ 'rotating': isRefreshing }">🔄</span> 
+          <span class="btn-icon" :class="{ rotating: isRefreshing }">🔄</span>
           <span class="btn-text">全部刷新</span>
         </button>
       </div>
     </div>
 
     <div class="data-grid">
-      <div 
-        v-for="item in dataList" 
-        :key="item.key" 
+      <div
+        v-for="item in dataList"
+        :key="item.key"
         class="data-card"
-        :class="{ 'copied': item.copied, 'refreshing': item.refreshing }"
+        :class="{ copied: item.copied, refreshing: item.refreshing }"
         :style="{ animationDelay: `${item.key.charCodeAt(0) * 0.05}s` }"
       >
         <div class="card-header">
@@ -178,27 +176,29 @@ onMounted(() => {
             <span class="label">{{ item.label }}</span>
           </div>
           <div class="card-actions">
-            <button 
-              @click="refreshData(item)" 
-              class="icon-btn" 
+            <button
+              @click="refreshData(item)"
+              class="icon-btn"
               title="刷新"
-              :class="{ 'spinning': item.refreshing }"
+              :class="{ spinning: item.refreshing }"
             >
               <span class="icon">🔄</span>
             </button>
-            <button 
-              @click="copyData(item)" 
-              class="icon-btn" 
+            <button
+              @click="copyData(item)"
+              class="icon-btn"
               title="复制"
-              :class="{ 'success': item.copied }"
+              :class="{ success: item.copied }"
             >
-              <span class="icon">{{ item.copied ? '✓' : '📋' }}</span>
+              <span class="icon">{{ item.copied ? "✓" : "📋" }}</span>
             </button>
           </div>
         </div>
         <div class="card-body" @click="copyData(item)">
-          <div class="value-display">{{ item.value || '点击生成...' }}</div>
-          <div class="copy-hint">{{ item.copied ? '✓ 已复制' : '点击复制' }}</div>
+          <div class="value-display">{{ item.value || "点击生成..." }}</div>
+          <div class="copy-hint">
+            {{ item.copied ? "✓ 已复制" : "点击复制" }}
+          </div>
         </div>
       </div>
     </div>
@@ -218,7 +218,7 @@ onMounted(() => {
   overflow: hidden;
 }
 
-/* 背景装饰 */
+/* 背景装饰 - 性能优化 */
 .bg-decoration {
   position: fixed;
   top: 0;
@@ -228,41 +228,28 @@ onMounted(() => {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  /* 启用硬件加速 */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .floating-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.3;
-  animation: float 8s ease-in-out infinite;
+  filter: blur(60px); /* 减少模糊半径 */
+  opacity: 0.2; /* 降低不透明度 */
+  animation: float 10s ease-in-out infinite; /* 减慢动画速度 */
+  will-change: transform; /* 硬件加速 */
+  transform: translateZ(0);
 }
 
 .orb-1 {
-  width: 300px;
-  height: 300px;
-  background: var(--gradient-primary);
-  top: -100px;
-  left: -100px;
-  animation-delay: 0s;
-}
-
-.orb-2 {
-  width: 250px;
-  height: 250px;
-  background: var(--gradient-accent);
-  top: 50%;
-  right: -80px;
-  animation-delay: 2s;
-}
-
-.orb-3 {
-  width: 200px;
+  width: 200px; /* 减小尺寸 */
   height: 200px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  bottom: -50px;
-  left: 30%;
-  animation-delay: 4s;
+  background: var(--gradient-primary);
+  top: -80px;
+  left: -80px;
+  animation-delay: 0s;
 }
 
 .glass-header {
@@ -271,12 +258,16 @@ onMounted(() => {
   left: 0;
   right: 0;
   background: var(--glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* 减少模糊强度,提升性能 */
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
   z-index: 100;
   border-bottom: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   animation: slideDown 0.6s ease-out;
+  /* 硬件加速 */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .header-content {
@@ -355,23 +346,29 @@ onMounted(() => {
 
 .data-card {
   background: var(--gradient-card);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  /* 简化毛玻璃效果,提升性能 */
+  backdrop-filter: blur(8px) saturate(150%);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
   border: 1px solid var(--glass-border);
   border-radius: var(--border-radius);
   padding: 20px;
   box-shadow: var(--shadow);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   gap: 16px;
   animation: fadeIn 0.6s ease-out backwards;
   position: relative;
   overflow: hidden;
+  /* 硬件加速 */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .data-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -388,7 +385,7 @@ onMounted(() => {
 }
 
 .data-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-6px) translateZ(0); /* 减少位移,启用硬件加速 */
   box-shadow: var(--shadow-lg);
   border-color: rgba(102, 126, 234, 0.3);
 }
@@ -437,7 +434,7 @@ onMounted(() => {
 
 .icon-btn {
   background: var(--glass-bg-light);
-  backdrop-filter: blur(10px);
+  /* 移除毛玻璃,使用纯色背景提升性能 */
   color: var(--text-secondary);
   width: 32px;
   height: 32px;
@@ -447,8 +444,12 @@ onMounted(() => {
   justify-content: center;
   border-radius: 8px;
   border: 1px solid var(--glass-border);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s,
+    box-shadow 0.2s, border-color 0.2s;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  /* 硬件加速 */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .icon-btn:hover {
@@ -481,28 +482,31 @@ onMounted(() => {
 
 .card-body {
   background: var(--glass-bg-light);
-  backdrop-filter: blur(10px);
+  /* 移除毛玻璃,提升性能 */
   padding: 16px;
   border-radius: var(--border-radius-sm);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
   min-height: 48px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   border: 1px solid var(--glass-border);
+  /* 硬件加速 */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .card-body:hover {
   background: var(--glass-bg);
   border-color: rgba(102, 126, 234, 0.3);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
 }
 
 .card-body:active {
-  transform: scale(0.98);
+  transform: scale(0.98) translateZ(0);
 }
 
 .value-display {
@@ -511,7 +515,7 @@ onMounted(() => {
   color: var(--text-primary);
   word-break: break-all;
   line-height: 1.5;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
   transition: opacity 0.2s;
 }
 
@@ -545,16 +549,16 @@ onMounted(() => {
     background: var(--glass-bg);
     border-bottom-color: var(--glass-border);
   }
-  
+
   .card-body:hover {
     background: var(--glass-bg);
   }
-  
+
   .data-card:hover {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     border-color: rgba(102, 126, 234, 0.3);
   }
-  
+
   .icon-btn:hover {
     background: rgba(45, 55, 72, 0.6);
   }
@@ -566,20 +570,21 @@ onMounted(() => {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .header-content {
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
   }
-  
+
   .refresh-main-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .floating-orb {
-    opacity: 0.15;
+    opacity: 0.1; /* 移动端进一步降低不透明度 */
+    animation-duration: 12s; /* 减慢动画 */
   }
 }
 
@@ -587,11 +592,11 @@ onMounted(() => {
   .generator-container {
     padding: 100px 16px 32px;
   }
-  
+
   .title {
     font-size: 1.2rem;
   }
-  
+
   .data-card {
     padding: 16px;
   }

@@ -9,11 +9,11 @@
   --blue: #58a4f6;
   --light: #ffffff;
   
-  /* 毛玻璃效果变量 */
-  --glass-bg: rgba(255, 255, 255, 0.25);
-  --glass-bg-light: rgba(255, 255, 255, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.3);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  /* 毛玻璃效果变量 - 简化版 */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bg-light: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.1);
   
   /* 渐变色 */
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -193,10 +193,10 @@ textarea, input {
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.6);
     
-    /* 深色模式毛玻璃变量 */
-    --glass-bg: rgba(26, 32, 44, 0.6);
-    --glass-bg-light: rgba(26, 32, 44, 0.4);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    /* 深色模式毛玻璃变量 - 简化版 */
+    --glass-bg: rgba(26, 32, 44, 0.8);
+    --glass-bg-light: rgba(26, 32, 44, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.15);
     
     /* 深色模式渐变 */
     --gradient-background: linear-gradient(135deg, #0f1419 0%, #1a202c 50%, #2d3748 100%);
